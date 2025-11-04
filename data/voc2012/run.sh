@@ -1,0 +1,1 @@
+ln -s /media/data0/MLICdataset/VOC2012/VOCdevkit VOCdevkit

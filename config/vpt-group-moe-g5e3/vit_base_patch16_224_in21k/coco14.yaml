@@ -1,0 +1,139 @@
+MODE:
+  name: MLIC-R101
+DATA:
+  dataset_dir: '/media/data2/maleilei/MLIC/DDP-VTPMOD/data/coco/'
+  dataname: 'coco'
+  num_workers: 8
+  num_class: 80
+  classnames: ['person','bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck',
+                    'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench',
+                    'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra',
+                    'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+                    'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove',
+                    'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup',
+                    'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange',
+                    'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
+                    'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse',
+                    'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink',
+                    'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier',
+                    'toothbrush']
+
+  TRANSFORM:
+    img_size: 224
+    crop: False
+    cutout: True
+    length: 112
+    cut_fact: 0.5
+    orid_norm: False
+    remove_norm: False
+    n_holes: 1
+
+
+INPUT:
+  SIZE: (224, 224)
+  INTERPOLATION: "bicubic"
+  PIXEL_MEAN: [0.48145466, 0.4578275, 0.40821073]
+  PIXEL_STD: [0.26862954, 0.26130258, 0.27577711]
+  TRANSFORMS: ["random_resized_crop", "MLC_Policy", "random_flip", "normalize"]
+  TRANSFORMS_TEST: ["resize", "normalize"]
+  random_resized_crop_scale: (0.5, 1.0)
+
+
+MODEL:
+  arch: 'MLIC-vit_base_patch16_224_in21k'
+  use_BN: False
+  BACKBONE:
+    backbone: 'vit_base_patch16_224_in21k'
+    pretrained: True
+    frozen_backbone: True
+
+  # TRANSFORMER:
+  #   nheads: 8
+  #   enc_layers: 1
+  #   pos: False
+
+  CLASSIFIER:
+    num_class: 80
+
+LOSS:
+  loss_mode: asl # asl, multi_bce
+  loss_dev: -1
+  ASL:
+    eps: 1e-05
+    dtgfl: True
+    gamma_pos: 0.0
+    gamma_neg: 2.0
+    loss_clip: 0.0
+  Coef:
+    cls_asl_coef: 1.0
+    # rec_fea_coef: 0.0
+    # rec_graph_coef: 1.0
+    # cls_bce_coef: 1.0
+    # div_coef: 1.0
+
+OPTIMIZER:
+  optim: 'AdamW'
+  lr_scheduler: 'OneCycleLR'
+  pattern_parameters: 'single_lr'
+  momentum: 0.9
+  weight_decay: 1e-2
+  max_clip_grad_norm: 0
+  epoch_step: [10, 20]
+  batch_size: 64
+  lr: 5e-4
+  lrp: 0.1
+  warmup_scheduler: False
+  warmup_type: 'linear'
+  warmup_epoch: 0
+
+
+DDP:
+  world_size: 1
+  rank: 0
+  dist_url: 'tcp://127.0.0.1:3722'
+  local_rank: 1
+
+TRAIN:
+  seed: 1
+  amp: True # default is True
+  amp_dtype: 'bfloat16'
+  early_stop: True
+  kill_stop: True
+  device: 'CUDA'
+  start_epoch: 0
+  epochs: 40 # 80
+  ema_decay: 0.9997
+  ema_epoch: -1
+  evaluate: False
+  ratio: 2.0
+
+INPUT_OUTPUT:
+  output: ''
+  resume: ''
+  resume_omit: []
+  print_freq: 100
+  out_aps: False
+  ignore_path: 'data/coco/ignore.npy'
+
+EVAL:
+  val_interval: 1
+  val_epoch_start: 0
+
+
+# OPTIMIZER:
+#   optim: 'SGD' # SGD
+#   lr_scheduler: 'MultiStepLR'
+#   pattern_parameters: 'mutil_lr'
+#   momentum: 0.9
+#   warmup_epoch: 5
+#   warmup_multiplier: 50
+#   warmup_scheduler: True
+#   epoch_step: [4, 8, 12, 16, 20, 24, 28]
+#   # lr: 1.0
+#   # base_lr: 0.1
+#   # base_lr: 1.0
+#   # lr:  1e-4
+#   batch_size: 16
+#   lr: 0.01
+#   lrp: 0.1
+#   weight_decay: 1e-4
